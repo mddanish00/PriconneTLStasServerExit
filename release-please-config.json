@@ -1,0 +1,24 @@
+{
+  "packages": {
+    ".": {
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": false,
+      "bump-patch-for-minor-pre-major": false,
+      "draft": false,
+      "prerelease": false,
+      "release-type": "simple",
+      "extra-files": [
+        {
+          "type": "xml",
+          "path": "StasServerExit/StasServerExit.csproj",
+          "xpath": "/*/PropertyGroup/Version"
+        },
+        {
+          "type": "generic",
+          "path": "StasServerExit/Plugin.cs"
+        }
+      ]
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
