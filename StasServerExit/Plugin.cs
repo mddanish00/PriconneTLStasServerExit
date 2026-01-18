@@ -28,7 +28,7 @@ using StasServer;
 namespace StasServerExit;
 
 
-[BepInPlugin("StasServerExit", "PriconneTLStasServerExit by mddanish00", "1.0.0")]
+[BepInPlugin("StasServerExit", "PriconneTLStasServerExit by mddanish00", "0.0.0")] //x-release-please-version
 [BepInProcess("PrincessConnectReDive.exe")]
 public class Plugin : BasePlugin
 {
