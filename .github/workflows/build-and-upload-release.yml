@@ -1,0 +1,197 @@
+on:
+  workflow_call:
+    inputs:
+      repo_tag:
+        description: 'The tag of this repository to use'
+        required: true
+        type: string
+      endpoint_repo_tag:
+        description: 'The tag of mddanish00/XUnity-AutoTranslator-StasServerEndpoint repo to use'
+        required: true
+        type: string
+      tl_version:
+        description: 'The version of PriconneReTL to use for building the release'
+        required: true
+        type: string
+
+name: Build and Upload Release
+
+jobs:
+    download-PriconneReTL:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - name: Fetch PriconneReTL if available
+              id: cache-PriconneReTL
+              uses: actions/cache@v5
+              with:
+                path: PriconneTL_${{ inputs.tl_version }}.zip
+                key: tl-cache-${{ inputs.tl_version }}
+                enableCrossOsArchive: true
+            
+            - name: Download PriconneReTL if not cached
+              id: download-PriconneReTL
+              if: steps.cache-PriconneReTL.outputs.cache-hit != true
+              run: |
+                gh release download ${{ inputs.tl_version }} \
+                  --repo ImaterialC/PriconneRe-TL \
+                  --pattern "PriconneTL_${{ inputs.tl_version }}.zip" \
+                  --output "PriconneTL_${{ inputs.tl_version }}.zip"
+    
+    build-StasServerEndpoint:
+        runs-on: windows-latest
+        needs: download-PriconneReTL
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout StasServerEndpoint
+              uses: actions/checkout@v6
+              with:
+                ref: ${{ inputs.endpoint_repo_tag }}
+                repository: mddanish00/XUnity-AutoTranslator-StasServerEndpoint
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: 8.x
+            
+            - name: Retrieve PriconneReTL from cache
+              uses: actions/cache@v5
+              with:
+                path: PriconneTL_${{ inputs.tl_version }}.zip
+                key: tl-cache-${{ inputs.tl_version }}
+                enableCrossOsArchive: true
+                fail-on-cache-miss: true
+            
+            - name: Unzip PriconneReTL
+              run: |
+                Expand-Archive -Path PriconneTL_${{ inputs.tl_version }}.zip -DestinationPath out
+                Copy-Item out\BepInEx\core\XUnity.Common.dll libs-il2cpp
+                Copy-Item out\BepInEx\plugins\XUnity.AutoTranslator\XUnity.AutoTranslator.Plugin.Core.dll libs-il2cpp
+                Remove-Item -Path out -Recurse -Force
+
+            - name: Build StasServerEndpoint
+              run: dotnet build -c Release -v n -f net6.0
+            
+            - name: Upload the built DLLs as artifacts
+              uses: actions/upload-artifact@v6
+              with:
+                name: stas-server-endpoint-artifacts
+                path: build/Release/net6.0/StasServer.dll
+                retention-days: 1
+    
+    build-release:
+        runs-on: windows-latest
+        needs: build-StasServerEndpoint
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout release
+              uses: actions/checkout@v6
+              with:
+                ref: ${{ inputs.repo_tag }}
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: 8.x
+            
+            - name: Retrieve PriconneReTL from cache
+              uses: actions/cache@v5
+              with:
+                path: PriconneTL_${{ inputs.tl_version }}.zip
+                key: tl-cache-${{ inputs.tl_version }}
+                enableCrossOsArchive: true
+                fail-on-cache-miss: true
+
+            - name: Download Endpoint artifacts
+              uses: actions/download-artifact@v7
+              with:
+                name: stas-server-endpoint-artifacts
+            
+            - name: Unzip PriconneReTL and Setup libs folder
+              run: |
+                Expand-Archive -Path PriconneTL_${{ inputs.tl_version }}.zip -DestinationPath out
+                Copy-Item out\BepInEx\core libs -Recurse
+                Copy-Item out\BepInEx\plugins libs -Recurse
+                Copy-Item out\BepInEx\interop libs -Recurse
+                Copy-Item StasServer.dll libs\plugins\XUnity.AutoTranslator\Translators
+                Remove-Item -Path out -Recurse -Force
+
+            - name: Build release
+              run: dotnet build -c Release -v n
+
+            - name: Upload the built DLLs as artifacts
+              uses: actions/upload-artifact@v6
+              with:
+                name: stas-server-exit-artifacts
+                path: build/Release/net6.0/PriconneTLStasServerExit.dll
+                retention-days: 1
+
+    upload-release:
+        runs-on: ubuntu-latest
+        needs: build-release
+        permissions:
+            contents: write
+        steps:
+            - name: Download all artifacts
+              uses: actions/download-artifact@v7
+              with:
+                path: .
+                merge-multiple: true
+
+            - name: Zip release
+              run: |
+                zip PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip PriconneTLStasServerExit.dll StasServer.dll
+            
+            - name: Update release and upload assets
+              uses: actions/github-script@v8
+              with:
+                script: |
+                    const tag = '${{ inputs.repo_tag }}';
+                    const owner = context.repo.owner;
+                    const repo = context.repo.repo;
+
+                    const release = await github.rest.repos.getReleaseByTag({
+                    owner,
+                    repo,
+                    tag,
+                    });
+
+                    const current_body = release.data.body || '';
+                    const new_line = `Build with PriconneReTL version: v${{ inputs.tl_version }}\n\nBuild with StasServerEndpoint version: v${{ inputs.endpoint_repo_tag }}`;
+                    let new_body;
+
+                    if (current_body.includes("Build with PriconneReTL version:")) {
+                        new_body = current_body.replace(/Build with PriconneReTL version: .*\n\nBuild with StasServerEndpoint version: .*/, new_line);
+                    } else {
+                        new_body = `${current_body}\n\n${new_line}`;
+                    }
+
+                    await github.rest.repos.updateRelease({
+                        owner,
+                        repo,
+                        release_id: release.data.id,
+                        body: new_body,
+                    });
+
+                    const fs = require('fs');
+                    const path = require('path');
+                    const file = 'PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip';
+
+                    const filePath = path.join(process.cwd(), file);
+                    await github.rest.repos.uploadReleaseAsset({
+                        owner,
+                        repo,
+                        release_id: release.data.id,
+                        name: file,
+                        data: fs.readFileSync(filePath),
+                    });
+                    
+
+
+            
+
+            
+            
