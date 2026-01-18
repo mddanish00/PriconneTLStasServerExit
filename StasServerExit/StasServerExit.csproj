@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
 	<Authors>mddanish00</Authors>
 	<Version>0.0.0</Version>
 	<Copyright>
@@ -8,19 +8,26 @@
 		Copyright (C) 2023 Kevga
 	</Copyright>
 	<Description>BepInEx plugin to automatically close StasServer when closing Priconne.</Description>
-    <TargetFramework>net6.0</TargetFramework>
+	<TargetFramework>net6.0</TargetFramework>
 	<OutputType>Library</OutputType>
-    <RootNamespace>StasServerExit</RootNamespace>
-    <AssemblyName>PriconneTLStasServerExit</AssemblyName>
-    <ImplicitUsings>enable</ImplicitUsings>
+	<RootNamespace>StasServerExit</RootNamespace>
+	<AssemblyName>PriconneTLStasServerExit</AssemblyName>
+	<ImplicitUsings>enable</ImplicitUsings>
 	<Nullable>enable</Nullable>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-  </PropertyGroup>
+	<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\LICENSE" Pack="true" PackagePath=""/>
-  </ItemGroup>  
+	<ItemGroup>
+		<None Include="..\LICENSE" Pack="true" PackagePath=""/>
+	</ItemGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    	<OutputPath>..\build\Debug\</OutputPath>
+  	</PropertyGroup>
+  	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    	<OutputPath>..\build\Release\</OutputPath>
+  	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp" Publicize="True">
