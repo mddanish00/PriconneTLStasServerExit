@@ -1,0 +1,55 @@
+on:
+  push:
+    branches:
+      - main
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  get-version-external:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required for gh release view
+    outputs:
+      endpoint_repo_tag: ${{ steps.get_version.outputs.endpoint_repo_tag }}
+      tl_version: ${{ steps.get_version.outputs.tl_version }}
+    steps:
+      - name: Get latest version
+        id: get_version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          endpoint_repo_tag=$(gh release list --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --limit 1 --json tagName -q .[0].tagName)
+          tl_version=$(gh release list --repo ImaterialC/PriconneRe-TL --limit 1 --json tagName -q .[0].tagName)
+          echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
+          echo "tl_version=$tl_version" >> $GITHUB_OUTPUT
+
+
+  build-release:
+    needs: [release-please, get-version-external]
+    if: ${{ needs.release-please.outputs.release_created }}
+    permissions:
+      contents: write # Required to pass permissions to the reusable workflow
+    uses: ./.github/workflows/build-and-upload-release.yml
+    with:
+      repo_tag: ${{ needs.release-please.outputs.tag_name }}
+      endpoint_repo_tag: ${{ needs.get-version-external.outputs.endpoint_repo_tag }}
+      tl_version: ${{ needs.get-version-external.outputs.tl_version }}
+    secrets: inherit

@@ -1,0 +1,90 @@
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      repo_tag:
+        description: 'Tag from mddanish00/PriconneTLStasServerExit'
+        required: false
+      endpoint_repo_tag:
+        description: 'Tag from mddanish00/XUnity-AutoTranslator-StasServerEndpoint'
+        required: false
+
+name: Rebuild
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_build: ${{ steps.compare-versions.outputs.should_build }}
+      tl_version: ${{ steps.get-version.outputs.tl_version }}
+      repo_tag: ${{ steps.resolve-inputs.outputs.repo_tag }}
+      endpoint_repo_tag: ${{ steps.resolve-inputs.outputs.endpoint_repo_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Cache PriconneReTL version
+        id: cache-version
+        uses: actions/cache@v5
+        with:
+          path: PriconneReTL_version
+          key: ${{ runner.os }}-priconne-retl-version
+
+      - name: Get latest PriconneReTL version
+        id: get-version
+        run: |
+          tl_version=$(gh release list --repo ImaterialC/PriconneRe-TL --limit 1 --json tagName -q .[0].tagName)
+          echo "tl_version=$tl_version" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compare versions
+        id: compare-versions
+        run: |
+          should_build="false"
+          if [ -f PriconneReTL_version ]; then
+            cached_version=$(cat PriconneReTL_version)
+            if [ "$cached_version" != "${{ steps.get-version.outputs.tl_version }}" ]; then
+              should_build="true"
+            fi
+          else
+            should_build="true"
+          fi
+          if [ "$should_build" == "true" ]; then
+             echo "PriconneReTL version is not up to date. Proceeding with build."
+             echo "${{ steps.get-version.outputs.tl_version }}" > PriconneReTL_version
+          else
+             echo "PriconneReTL version is up to date. Skipping further steps."
+          fi
+          echo "should_build=$should_build" >> $GITHUB_OUTPUT
+
+      - name: Resolve inputs
+        if: steps.compare-versions.outputs.should_build == 'true'
+        id: resolve-inputs
+        run: |
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            repo_tag=$(gh release list --repo mddanish00/PriconneTLStasServerExit --limit 1 --json tagName -q .[0].tagName)
+            endpoint_repo_tag=$(gh release list --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --limit 1 --json tagName -q .[0].tagName)
+            echo "repo_tag=$repo_tag" >> $GITHUB_OUTPUT
+            echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
+          else
+            echo "repo_tag=${{ github.event.inputs.repo_tag }}" >> $GITHUB_OUTPUT
+            echo "endpoint_repo_tag=${{ github.event.inputs.endpoint_repo_tag }}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  call_reusable_workflow:
+    needs: check_version
+    if: needs.check_version.outputs.should_build == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build-and-upload-release.yml
+    with:
+      repo_tag: ${{ needs.check_version.outputs.repo_tag }}
+      endpoint_repo_tag: ${{ needs.check_version.outputs.endpoint_repo_tag }}
+      tl_version: ${{ needs.check_version.outputs.tl_version }}
+    secrets: inherit
