@@ -52,7 +52,7 @@ jobs:
                 repository: mddanish00/XUnity-AutoTranslator-StasServerEndpoint
 
             - name: Setup .NET
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v5
               with:
                 dotnet-version: 8.x
             
@@ -93,7 +93,7 @@ jobs:
                 ref: ${{ inputs.repo_tag }}
 
             - name: Setup .NET
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v5
               with:
                 dotnet-version: 8.x
             
@@ -145,7 +145,7 @@ jobs:
               run: |
                 zip PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip PriconneTLStasServerExit.dll StasServer.dll
             
-            - name: Update release and upload assets
+            - name: Update release body
               uses: actions/github-script@v8
               with:
                 script: |
@@ -154,9 +154,9 @@ jobs:
                     const repo = context.repo.repo;
 
                     const release = await github.rest.repos.getReleaseByTag({
-                    owner,
-                    repo,
-                    tag,
+                        owner,
+                        repo,
+                        tag,
                     });
 
                     const current_body = release.data.body || '';
@@ -175,23 +175,9 @@ jobs:
                         release_id: release.data.id,
                         body: new_body,
                     });
-
-                    const fs = require('fs');
-                    const path = require('path');
-                    const file = 'PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip';
-
-                    const filePath = path.join(process.cwd(), file);
-                    await github.rest.repos.uploadReleaseAsset({
-                        owner,
-                        repo,
-                        release_id: release.data.id,
-                        name: file,
-                        data: fs.readFileSync(filePath),
-                    });
-                    
-
-
             
-
-            
-            
+            - name: Upload release asset
+              env:
+                GH_TOKEN: ${{ github.token }}
+              run: |
+                gh release upload ${{ inputs.repo_tag }} PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip --clobber
