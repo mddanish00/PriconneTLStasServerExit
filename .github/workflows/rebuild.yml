@@ -36,7 +36,7 @@ jobs:
       - name: Get latest PriconneReTL version
         id: get-version
         run: |
-          tl_version=$(gh release list --repo ImaterialC/PriconneRe-TL --limit 1 --json tagName -q .[0].tagName)
+          tl_version=$(gh release view --repo ImaterialC/PriconneRe-TL --json tagName --jq .tagName)
           echo "tl_version=$tl_version" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,8 +66,8 @@ jobs:
         id: resolve-inputs
         run: |
           if [ "${{ github.event_name }}" == "schedule" ]; then
-            repo_tag=$(gh release list --repo mddanish00/PriconneTLStasServerExit --limit 1 --json tagName -q .[0].tagName)
-            endpoint_repo_tag=$(gh release list --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --limit 1 --json tagName -q .[0].tagName)
+            repo_tag=$(gh release view --repo mddanish00/PriconneTLStasServerExit --json tagName --jq .tagName)
+            endpoint_repo_tag=$(gh release view --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --json tagName --jq .tagName)
             echo "repo_tag=$repo_tag" >> $GITHUB_OUTPUT
             echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
           else
