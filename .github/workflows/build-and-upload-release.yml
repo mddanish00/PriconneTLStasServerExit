@@ -183,4 +183,4 @@ jobs:
               env:
                 GH_TOKEN: ${{ github.token }}
               run: |
-                gh release upload ${{ inputs.repo_tag }} PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip --clobber
+                gh release upload ${{ inputs.repo_tag }} PriconneTLStasServerExit-${{ inputs.repo_tag }}.zip --clobber --repo mddanish00/PriconneTLStasServerExit
