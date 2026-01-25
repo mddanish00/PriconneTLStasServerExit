@@ -114,9 +114,10 @@ jobs:
             - name: Unzip PriconneReTL and Setup libs folder
               run: |
                 Expand-Archive -Path PriconneTL_${{ inputs.tl_version }}.zip -DestinationPath out
-                Copy-Item out\BepInEx\core libs -Recurse
-                Copy-Item out\BepInEx\plugins libs -Recurse
-                Copy-Item out\BepInEx\interop libs -Recurse
+                New-Item -Path libs -ItemType Directory
+                Copy-Item -Path out\BepInEx\core -Destination libs -Recurse
+                Copy-Item -Path out\BepInEx\plugins -Destination libs -Recurse
+                Copy-Item -Path out\BepInEx\interop -Destination libs -Recurse
                 Copy-Item StasServer.dll libs\plugins\XUnity.AutoTranslator\Translators
                 Remove-Item -Path out -Recurse -Force
 
