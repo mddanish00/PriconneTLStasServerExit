@@ -36,8 +36,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          endpoint_repo_tag=$(gh release list --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --limit 1 --json tagName -q .[0].tagName)
-          tl_version=$(gh release list --repo ImaterialC/PriconneRe-TL --limit 1 --json tagName -q .[0].tagName)
+          endpoint_repo_tag=$(gh release view --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --json tagName -q .tagName)
+          tl_version=$(gh release view --repo ImaterialC/PriconneRe-TL --json tagName -q .tagName)
           echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
           echo "tl_version=$tl_version" >> $GITHUB_OUTPUT
 
