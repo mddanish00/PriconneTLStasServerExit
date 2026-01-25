@@ -36,8 +36,7 @@ jobs:
               run: |
                 gh release download ${{ inputs.tl_version }} \
                   --repo ImaterialC/PriconneRe-TL \
-                  --pattern "PriconneTL_${{ inputs.tl_version }}.zip" \
-                  --output "PriconneTL_${{ inputs.tl_version }}.zip"
+                  --pattern "PriconneTL_${{ inputs.tl_version }}.zip"
     
     build-StasServerEndpoint:
         runs-on: windows-latest
@@ -160,7 +159,7 @@ jobs:
                     });
 
                     const current_body = release.data.body || '';
-                    const new_line = `Build with PriconneReTL version: v${{ inputs.tl_version }}\n\nBuild with StasServerEndpoint version: v${{ inputs.endpoint_repo_tag }}`;
+                    const new_line = `Build with PriconneReTL version: [${{ inputs.tl_version }}](https://github.com/ImaterialC/PriconneRe-TL/releases/tag/${{ inputs.tl_version }})\n\nBuild with StasServerEndpoint version: [${{ inputs.endpoint_repo_tag }}](https://github.com/mddanish00/XUnity-AutoTranslator-StasServerEndpoint/tree/${{ inputs.endpoint_repo_tag }})`;
                     let new_body;
 
                     if (current_body.includes("Build with PriconneReTL version:")) {
