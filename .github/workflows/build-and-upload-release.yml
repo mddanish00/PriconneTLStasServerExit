@@ -38,7 +38,8 @@ jobs:
               run: |
                 gh release download ${{ inputs.tl_version }} \
                   --repo ImaterialC/PriconneRe-TL \
-                  --pattern "PriconneTL_${{ inputs.tl_version }}.zip"
+                  --pattern "PriconneTL_${{ inputs.tl_version }}.zip" \
+                  --skip-existing
     
     build-StasServerEndpoint:
         runs-on: windows-latest
