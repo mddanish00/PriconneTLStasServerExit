@@ -1,14 +1,7 @@
 on:
   workflow_dispatch:
-    inputs:
-      repo_tag:
-        description: 'Tag from mddanish00/PriconneTLStasServerExit'
-        required: false
-      endpoint_repo_tag:
-        description: 'Tag from mddanish00/XUnity-AutoTranslator-StasServerEndpoint'
-        required: false
   schedule:
-    - cron: '30 9 * * *'
+    - cron: '0 9 * * *'
 
 name: Rebuild
 
@@ -20,6 +13,7 @@ jobs:
     outputs:
       should_build: ${{ steps.compare-versions.outputs.should_build }}
       tl_version: ${{ steps.get-version.outputs.tl_version }}
+      current_tl_version: ${{ steps.get-version.outputs.current_tl_version }}
       repo_tag: ${{ steps.resolve-inputs.outputs.repo_tag }}
       endpoint_repo_tag: ${{ steps.resolve-inputs.outputs.endpoint_repo_tag }}
     steps:
@@ -28,7 +22,7 @@ jobs:
 
       - name: Cache PriconneReTL version
         id: cache-version
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: PriconneReTL_version
           key: PriconneReTL-version
@@ -37,7 +31,14 @@ jobs:
         id: get-version
         run: |
           tl_version=$(gh release view --repo ImaterialC/PriconneRe-TL --json tagName --jq .tagName)
+          if [ -f PriconneReTL_version ]; then
+            current_tl_version=$(cat PriconneReTL_version)
+          else
+            current_tl_version=""
+          fi
+          
           echo "tl_version=$tl_version" >> $GITHUB_OUTPUT
+          echo "current_tl_version=$current_tl_version" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -45,12 +46,7 @@ jobs:
         id: compare-versions
         run: |
           should_build="false"
-          if [ -f PriconneReTL_version ]; then
-            cached_version=$(cat PriconneReTL_version)
-            if [ "$cached_version" != "${{ steps.get-version.outputs.tl_version }}" ]; then
-              should_build="true"
-            fi
-          else
+          if [ "${{ steps.get-version.outputs.current_tl_version }}" != "${{ steps.get-version.outputs.tl_version }}" ]; then
             should_build="true"
           fi
           if [ "$should_build" == "true" ]; then
@@ -65,17 +61,21 @@ jobs:
         if: steps.compare-versions.outputs.should_build == 'true'
         id: resolve-inputs
         run: |
-          if [ "${{ github.event_name }}" == "schedule" ]; then
-            repo_tag=$(gh release view --repo mddanish00/PriconneTLStasServerExit --json tagName --jq .tagName)
-            endpoint_repo_tag=$(gh release view --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --json tagName --jq .tagName)
-            echo "repo_tag=$repo_tag" >> $GITHUB_OUTPUT
-            echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
-          else
-            echo "repo_tag=${{ github.event.inputs.repo_tag }}" >> $GITHUB_OUTPUT
-            echo "endpoint_repo_tag=${{ github.event.inputs.endpoint_repo_tag }}" >> $GITHUB_OUTPUT
-          fi
+          repo_tag=$(gh release view --repo mddanish00/PriconneTLStasServerExit --json tagName --jq .tagName)
+          endpoint_repo_tag=$(gh release view --repo mddanish00/XUnity-AutoTranslator-StasServerEndpoint --json tagName --jq .tagName)
+          echo "repo_tag=$repo_tag" >> $GITHUB_OUTPUT
+          echo "endpoint_repo_tag=$endpoint_repo_tag" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Save to cache
+        if: steps.compare-versions.outputs.should_build == 'true'
+        id: save-to-cache
+        uses: actions/cache/save@v5
+        with:
+          path: PriconneReTL_version
+          key: ${{ steps.cache-version.outputs.cache-primary-key }}
+
 
   call_reusable_workflow:
     needs: check_version

@@ -163,13 +163,13 @@ jobs:
                     });
 
                     const current_body = release.data.body || '';
-                    const new_line = `Build with PriconneReTL version: [${{ inputs.tl_version }}](https://github.com/ImaterialC/PriconneRe-TL/releases/tag/${{ inputs.tl_version }})\n\nBuild with StasServerEndpoint version: [${{ inputs.endpoint_repo_tag }}](https://github.com/mddanish00/XUnity-AutoTranslator-StasServerEndpoint/tree/${{ inputs.endpoint_repo_tag }})`;
+                    const new_line = `Build with PriconneReTL version: [${{ inputs.tl_version }}](https://github.com/ImaterialC/PriconneRe-TL/releases/tag/${{ inputs.tl_version }})\nBuild with StasServerEndpoint version: [${{ inputs.endpoint_repo_tag }}](https://github.com/mddanish00/XUnity-AutoTranslator-StasServerEndpoint/tree/${{ inputs.endpoint_repo_tag }})`;
                     let new_body;
 
                     if (current_body.includes("Build with PriconneReTL version:")) {
-                        new_body = current_body.replace(/Build with PriconneReTL version: .*\n\nBuild with StasServerEndpoint version: .*/, new_line);
+                        new_body = current_body.replace(/Build with PriconneReTL version: .*\nBuild with StasServerEndpoint version: .*/, new_line);
                     } else {
-                        new_body = `${current_body}\n\n${new_line}`;
+                        new_body = `${current_body}\n${new_line}`;
                     }
 
                     await github.rest.repos.updateRelease({
