@@ -25,7 +25,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: PriconneReTL_version
-          key: PriconneReTL-version
+          key: PriconneReTL-version-restore-${{ github.run_id }}
+          restore-keys: |
+            PriconneReTL-version-
 
       - name: Get latest PriconneReTL version
         id: get-version
@@ -74,7 +76,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: PriconneReTL_version
-          key: ${{ steps.cache-version.outputs.cache-primary-key }}
+          key: PriconneReTL-version-${{ steps.get-version.outputs.tl_version }}
 
 
   call_reusable_workflow:

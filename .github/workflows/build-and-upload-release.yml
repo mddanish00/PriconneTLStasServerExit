@@ -166,11 +166,14 @@ jobs:
                     const new_line = `Build with PriconneReTL version: [${{ inputs.tl_version }}](https://github.com/ImaterialC/PriconneRe-TL/releases/tag/${{ inputs.tl_version }})\nBuild with StasServerEndpoint version: [${{ inputs.endpoint_repo_tag }}](https://github.com/mddanish00/XUnity-AutoTranslator-StasServerEndpoint/tree/${{ inputs.endpoint_repo_tag }})`;
                     let new_body;
 
+                    console.log("Current body: " + current_body);
                     if (current_body.includes("Build with PriconneReTL version:")) {
-                        new_body = current_body.replace(/Build with PriconneReTL version: .*\nBuild with StasServerEndpoint version: .*/, new_line);
+                        const regex = new RegExp(/Build with PriconneReTL version: .*[\r\n]+Build with StasServerEndpoint version: .*/);
+                        new_body = current_body.replace(regex, new_line);
                     } else {
                         new_body = `${current_body}\n${new_line}`;
                     }
+                    console.log("New body: " + new_body);
 
                     await github.rest.repos.updateRelease({
                         owner,
