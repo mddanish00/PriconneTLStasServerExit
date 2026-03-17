@@ -90,3 +90,21 @@ jobs:
       endpoint_repo_tag: ${{ needs.check_version.outputs.endpoint_repo_tag }}
       tl_version: ${{ needs.check_version.outputs.tl_version }}
     secrets: inherit
+
+    
+  delete-runs:
+    needs: check_version
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 7
+          keep_minimum_runs: 1
+          use_daily_retention: true
+          delete_workflow_pattern: Rebuild
