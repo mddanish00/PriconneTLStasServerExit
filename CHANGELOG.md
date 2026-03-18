@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/mddanish00/PriconneTLStasServerExit/compare/v1.0.0...v1.1.0) (2026-03-18)
+
+
+### Features
+
+* attach TL version on auto build metadata ([b09bc20](https://github.com/mddanish00/PriconneTLStasServerExit/commit/b09bc205fd8f36e43347e93c780891c53370220f))
+
+
+### Bug Fixes
+
+* fix typo on copyright csproj ([b09bc20](https://github.com/mddanish00/PriconneTLStasServerExit/commit/b09bc205fd8f36e43347e93c780891c53370220f))
+
 ## 1.0.0 (2026-01-25)
 
 
