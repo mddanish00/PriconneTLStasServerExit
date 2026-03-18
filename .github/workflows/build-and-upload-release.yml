@@ -123,7 +123,8 @@ jobs:
                 Remove-Item -Path out -Recurse -Force
 
             - name: Build release
-              run: dotnet build -c Release -v n
+              run: |
+                dotnet build -c Release -p:InformationalVersion="${{ inputs.repo_tag }} (PriconneReTL: ${{ inputs.tl_version }})" -v n
 
             - name: Upload the built DLLs as artifacts
               uses: actions/upload-artifact@v6
