@@ -172,7 +172,7 @@ jobs:
                         const regex = new RegExp(/Build with PriconneReTL version: .*[\r\n]+Build with StasServerEndpoint version: .*/);
                         new_body = current_body.replace(regex, new_line);
                     } else {
-                        new_body = `${current_body}\n${new_line}`;
+                        new_body = `${current_body}\n\n${new_line}`;
                     }
                     console.log("New body: " + new_body);
 
