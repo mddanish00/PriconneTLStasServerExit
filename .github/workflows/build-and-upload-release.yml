@@ -54,9 +54,9 @@ jobs:
                 repository: mddanish00/XUnity-AutoTranslator-StasServerEndpoint
 
             - name: Setup .NET
-              uses: actions/setup-dotnet@v5
+              uses: fast-actions/setup-dotnet@v1
               with:
-                dotnet-version: 8.x
+                sdk-version: 'lts'
             
             - name: Retrieve PriconneReTL from cache
               uses: actions/cache@v5
@@ -95,9 +95,9 @@ jobs:
                 ref: ${{ inputs.repo_tag }}
 
             - name: Setup .NET
-              uses: actions/setup-dotnet@v5
+              uses: fast-actions/setup-dotnet@v1
               with:
-                dotnet-version: 8.x
+                sdk-version: 'lts'
             
             - name: Retrieve PriconneReTL from cache
               uses: actions/cache@v5
